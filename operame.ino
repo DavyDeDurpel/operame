@@ -6,7 +6,7 @@
 #include <ArduinoOTA.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
-#include <logo.h>
+#include <skeppers_logo_co2_white.h>
 #include <list>
 #include <operame_strings.h>
 
@@ -37,6 +37,8 @@ int             co2_critical;
 int             co2_blink;
 String          mqtt_topic;
 String          mqtt_template;
+String          mqtt_username;
+String          mqtt_password;
 bool            add_units;
 bool            wifi_enabled;
 bool            mqtt_enabled;
@@ -88,9 +90,9 @@ void display_lines(const std::list<String>& lines, int fg = TFT_WHITE, int bg = 
 }
 
 void display_logo() {
-    clear_sprite();
+    clear_sprite(TFT_WHITE);
     sprite.setSwapBytes(true);
-    sprite.pushImage(12, 30, 215, 76, OPERAME_LOGO);
+    sprite.pushImage(12, 30, 215, 78, skeppers_logo_co2_white);
     sprite.pushSprite(0, 0);
 }
 
@@ -133,12 +135,12 @@ void calibrate() {
 }
 
 void ppm_demo() {
-    display_big("demo!");
+    display_big("DEMO");
     delay(3000);
     display_logo();
     delay(1000);
     int buttoncounter = 0;
-    for (int p = 400; p < 1200; p++) {
+    for (int p = 600; p < 1700; p++) {
         display_ppm(p);
         if (button(pin_demobutton)) {
             display_logo();
@@ -146,11 +148,11 @@ void ppm_demo() {
             return;
         }
 
-        // Hold portal button from 700 to 800 for manual calibration
-        if (p >= 700 && p < 800 && !digitalRead(pin_portalbutton)) {
+        // Hold portal button from 900 to 1500 for manual calibration
+        if (p >= 900 && p < 1500 && !digitalRead(pin_portalbutton)) {
             buttoncounter++;
         }
-        if (p == 800 && buttoncounter >= 85) {
+        if (p == 1500 && buttoncounter >= 85) {
             while (!digitalRead(pin_portalbutton)) delay(100);
             calibrate();
             display_logo();
@@ -208,10 +210,12 @@ void connect_mqtt() {
     if (mqtt.connected()) return;  // already/still connected
 
     static int failures = 0;
-    if (mqtt.connect(WiFiSettings.hostname.c_str())) {
+    if (mqtt.connect(WiFiSettings.hostname.c_str(), mqtt_username.c_str(), mqtt_password.c_str())) {
         failures = 0;
+        Serial.println("Synchronisatie gestart");
     } else {
         failures++;
+        Serial.println("Synchronisatiefout");
         if (failures >= max_failures) panic(T.error_mqtt);
     }
 }
@@ -321,7 +325,7 @@ void set_zero() {
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Operame start");
+    Serial.println("Skeppers CO2 start");
 
     digitalWrite(pin_backlight, HIGH);
     display.init();
@@ -344,7 +348,7 @@ void setup() {
     pinMode(pin_pcb_ok,         INPUT_PULLUP);
     pinMode(pin_backlight,      OUTPUT);
 
-    WiFiSettings.hostname = "operame-";
+    WiFiSettings.hostname = "skeppers-";
     WiFiSettings.language = LANGUAGE;
     WiFiSettings.begin();
     OperameLanguage::select(T, WiFiSettings.language);
@@ -355,7 +359,7 @@ void setup() {
     }
 
     display_logo();
-    delay(2000);
+    delay(5000);
 
     hwserial1.begin(9600, SERIAL_8N1, pin_sensor_rx, pin_sensor_tx);
 
@@ -374,23 +378,26 @@ void setup() {
         str.replace("{ssid}", WiFiSettings.hostname);
     }
 
-    wifi_enabled  = WiFiSettings.checkbox("operame_wifi", false, T.config_wifi);
-    ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
+    WiFiSettings.heading("Communicatie");
+    //wifi_enabled  = WiFiSettings.checkbox("WiFi inschakelen", false, T.config_wifi);
+    ota_enabled   = false; // WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
 
-    WiFiSettings.heading("CO2-niveaus");
-    co2_warning   = WiFiSettings.integer("operame_co2_warning", 400, 5000, 700, T.config_co2_warning);
-    co2_critical  = WiFiSettings.integer("operame_co2_critical",400, 5000, 800, T.config_co2_critical);
-    co2_blink     = WiFiSettings.integer("operame_co2_blink",   800, 5000, 800, T.config_co2_blink);
+    // WiFiSettings.heading("CO2-niveaus");
+    co2_warning   = 900; // WiFiSettings.integer("operame_co2_warning", 400, 50s00, 700, T.config_co2_warning);
+    co2_critical  = 1500; // WiFiSettings.integer("operame_co2_critical",400, 5000, 800, T.config_co2_critical);
+    co2_blink     = 1600; // WiFiSettings.integer("operame_co2_blink",   800, 5000, 800, T.config_co2_blink);
 
-    WiFiSettings.heading("MQTT");
-    mqtt_enabled  = WiFiSettings.checkbox("operame_mqtt", false, T.config_mqtt) && wifi_enabled;
-    String server = WiFiSettings.string("mqtt_server", 64, "", T.config_mqtt_server);
-    int port      = WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
-    max_failures  = WiFiSettings.integer("operame_max_failures", 0, 1000, 10, T.config_max_failures);
-    mqtt_topic  = WiFiSettings.string("operame_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
-    mqtt_interval = 1000UL * WiFiSettings.integer("operame_mqtt_interval", 10, 3600, 60, T.config_mqtt_interval);
-    mqtt_template = WiFiSettings.string("operame_mqtt_template", "{} PPM", T.config_mqtt_template);
-    WiFiSettings.info(T.config_template_info);
+    mqtt_enabled  = WiFiSettings.checkbox("log data", false, T.config_mqtt); // && wifi_enabled;
+    wifi_enabled = mqtt_enabled;
+    String server = "vceh-kiosk.westeurope.cloudapp.azure.com"; // WiFiSettings.string("mqtt_server", 64, "", T.config_mqtt_server);
+    int port      = 1883; // WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
+    max_failures  = 100; // WiFiSettings.integer("operame_max_failures", 0, 1000, 10, T.config_max_failures);
+    mqtt_topic    = "co2/" + WiFiSettings.string("operame_mqtt_topic", "skeppers/world", T.config_mqtt_topic);
+    mqtt_username = "vceh"; // WiFiSettings.string("mqtt_username", 64, "", "Gebruikerssnaam");
+    mqtt_password = "ourmosquittodoesnotbiteduringthenight"; // WiFiSettings.string("mqtt_password", 64, "", "Wachtwoord");
+    mqtt_interval = 1000UL * 60; // WiFiSettings.integer("operame_mqtt_interval", 10, 3600, 60, T.config_mqtt_interval);
+    mqtt_template = "{} PPM"; // WiFiSettings.string("operame_mqtt_template", "{} PPM", T.config_mqtt_template);
+    // WiFiSettings.info(T.config_template_info);
 
     WiFiSettings.onConnect = [] {
         display_big(T.connecting, TFT_BLUE);

@@ -118,7 +118,7 @@ bool select(Texts& T, String language) {
     }
 
     if(language == "nl") {
-        T.error_mqtt = "MQTT onbereikbaar";
+        T.error_mqtt = "Synchronisatie mislukt";
         T.error_driver = "driverfout";
         T.error_module = "module verkeerd om!";
         T.error_timeout = "Tijd verstreken";
@@ -134,8 +134,8 @@ bool select(Texts& T, String language) {
         T.config_mqtt = "Metingen via het MQTT-protocol versturen";
         T.config_mqtt_server = "Broker";  // zo heet dat in MQTT
         T.config_mqtt_port = "Broker TCP-poort";
-        T.config_max_failures = "Aantal verbindingsfouten voor automatische herstart";
-        T.config_mqtt_topic = "Topic";  // zo heet dat in MQTT
+        T.config_max_failures = "Aantal verbindingsfousten voor automatische herstart";
+        T.config_mqtt_topic = "Klant ID / Toestel ID";  // this defines the last 2 parts of the MQTT topic
         T.config_mqtt_interval = "Publicatie-interval [s]";
         T.config_mqtt_template = "Berichtsjabloon";
         T.config_template_info = "De {} in het sjabloon wordt vervangen door de gemeten waarde.";
