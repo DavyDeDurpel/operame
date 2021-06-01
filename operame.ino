@@ -140,7 +140,7 @@ void ppm_demo() {
     display_logo();
     delay(1000);
     int buttoncounter = 0;
-    for (int p = 600; p < 1700; p++) {
+    for (int p = 900; p < 1200; p++) {
         display_ppm(p);
         if (button(pin_demobutton)) {
             display_logo();
@@ -148,11 +148,11 @@ void ppm_demo() {
             return;
         }
 
-        // Hold portal button from 900 to 1500 for manual calibration
-        if (p >= 900 && p < 1500 && !digitalRead(pin_portalbutton)) {
+        // Hold portal button from 900 to 1200 for manual calibration
+        if (p >= 900 && p < 1200 && !digitalRead(pin_portalbutton)) {
             buttoncounter++;
         }
-        if (p == 1500 && buttoncounter >= 85) {
+        if (p == 1200 && buttoncounter >= 85) {
             while (!digitalRead(pin_portalbutton)) delay(100);
             calibrate();
             display_logo();
@@ -384,8 +384,8 @@ void setup() {
 
     // WiFiSettings.heading("CO2-niveaus");
     co2_warning   = 900; // WiFiSettings.integer("operame_co2_warning", 400, 50s00, 700, T.config_co2_warning);
-    co2_critical  = 1500; // WiFiSettings.integer("operame_co2_critical",400, 5000, 800, T.config_co2_critical);
-    co2_blink     = 1600; // WiFiSettings.integer("operame_co2_blink",   800, 5000, 800, T.config_co2_blink);
+    co2_critical  = 1200; // WiFiSettings.integer("operame_co2_critical",400, 5000, 800, T.config_co2_critical);
+    co2_blink     = 1300; // WiFiSettings.integer("operame_co2_blink",   800, 5000, 800, T.config_co2_blink);
 
     mqtt_enabled  = WiFiSettings.checkbox("log data", false, T.config_mqtt); // && wifi_enabled;
     wifi_enabled = mqtt_enabled;
