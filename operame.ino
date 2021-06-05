@@ -389,7 +389,7 @@ void setup() {
 
     mqtt_enabled  = WiFiSettings.checkbox("log data", false, T.config_mqtt); // && wifi_enabled;
     wifi_enabled = mqtt_enabled;
-    String server = "vceh-kiosk.westeurope.cloudapp.azure.com"; // WiFiSettings.string("mqtt_server", 64, "", T.config_mqtt_server);
+    String server = "skeppers.westeurope.cloudapp.azure.com"; // WiFiSettings.string("mqtt_server", 64, "", T.config_mqtt_server);
     int port      = 1883; // WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
     max_failures  = 100; // WiFiSettings.integer("operame_max_failures", 0, 1000, 10, T.config_max_failures);
     mqtt_topic    = "co2/" + WiFiSettings.string("operame_mqtt_topic", "skeppers/world", T.config_mqtt_topic);
