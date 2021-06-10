@@ -140,7 +140,7 @@ void ppm_demo() {
     display_logo();
     delay(1000);
     int buttoncounter = 0;
-    for (int p = 600; p < 1200; p++) {
+    for (int p = 600; p < 1500; p++) {
         display_ppm(p);
         if (button(pin_demobutton)) {
             display_logo();
