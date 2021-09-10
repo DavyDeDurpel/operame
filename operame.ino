@@ -449,6 +449,9 @@ void loop() {
 
     every(5000) {
         co2 = get_co2();
+        if (co2 > 420) {
+            co2 = ((co2 - 400) / 2) + 400;
+        }
         Serial.println(co2);
     }
 
